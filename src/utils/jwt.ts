@@ -15,3 +15,6 @@ export const signJWT = async (
 
     return jwt
 }
+export const generateTokens = async (userId : string, email : string) => {
+
+}

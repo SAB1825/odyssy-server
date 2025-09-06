@@ -40,18 +40,11 @@ export const registerController = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof ZodError) {
       throw new AppError(
-      error.message,
+        JSON.stringify(error.flatten().fieldErrors),
         HTTPSTATUS.BAD_REQUEST,
-        "ZodError"
+        "ZOD_VALIDATION_ERROR"
       );
     }
-    if (error instanceof Error) {
-      throw new AppError(
-        error.message,
-        HTTPSTATUS.INTERNAL_SERVER_ERROR,
-        errorMessage.INTERNAL_SERVER_ERROR
-      );
-    }
-    
+    throw error;
   }
 };
