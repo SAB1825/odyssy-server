@@ -11,11 +11,13 @@ export const errorHandler : ErrorRequestHandler = (
     console.log(`Error occured at: ${req.path}`);
     if(error instanceof AppError) {
         return res.status(error.errorCode).json({
+            name : error.name || "APP_ERROR",
             message : error.message,
             errorCode : error.errorCode
         })
     }
     return res.status(500).json({
+        name: "InternalServerError",
         message: "Internal Server Error",
         errorCode: "INTERNAL_SERVER_ERROR"
     });

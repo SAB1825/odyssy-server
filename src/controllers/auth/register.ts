@@ -15,15 +15,13 @@ export const registerController = async (req: Request, res: Response) => {
       email,
       password,
     });
-
-
+    
     const existingUser = await getUserByEmail(body.email);
 
     if (existingUser) {
       throw new AppError(
-        "User already exists with this email",
-        HTTPSTATUS.BAD_REQUEST,
         errorMessage.USER_ALREADY_EXISTS,
+        HTTPSTATUS.BAD_REQUEST,
         "AUTH_ERROR"
       );
     };
@@ -31,8 +29,6 @@ export const registerController = async (req: Request, res: Response) => {
     await sendVerificationEmail(body.email);
 
     const newUser = await createUser(body.name, body.email, body.password);
-
-    console.log("User created successfully", newUser);
 
     return res.status(HTTPSTATUS.CREATED).json({
       status: "success",
@@ -42,6 +38,13 @@ export const registerController = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
+    if (error instanceof ZodError) {
+      throw new AppError(
+      error.message,
+        HTTPSTATUS.BAD_REQUEST,
+        "ZodError"
+      );
+    }
     if (error instanceof Error) {
       throw new AppError(
         error.message,
@@ -49,13 +52,6 @@ export const registerController = async (req: Request, res: Response) => {
         errorMessage.INTERNAL_SERVER_ERROR
       );
     }
-    if (error instanceof ZodError) {
-      throw new AppError(
-        error.message,
-        HTTPSTATUS.BAD_REQUEST,
-        errorMessage.BAD_REQUEST,
-        "ZodError"
-      );
-    }
+    
   }
 };
