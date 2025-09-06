@@ -82,3 +82,13 @@ export const createSession = async (
   return newSession;
 }
 
+export const getUserById = async (userId : string) => {
+  try {
+    const currUser = await db.select().from(user).where(eq(user.id, userId));
+    return currUser[0];
+  } catch (error) {
+    console.error("Error fetching user by ID:", error);
+    throw new Error("Unable to fetch user");
+  }
+}
+

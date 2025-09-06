@@ -33,6 +33,7 @@ export const errorMessages = () => ( {
 	ACCOUNT_NOT_FOUND: "Account not found",
 	USER_ALREADY_HAS_PASSWORD:
 		"User already has a password. Provide that to delete the account.",
+	UNAUTHORIZED: "Unauthorized. Please login to perform this action.",
 })
 export const errorMessage = errorMessages();
 export type errorMessagesType = typeof errorMessage[keyof typeof errorMessage];
