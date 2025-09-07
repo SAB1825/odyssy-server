@@ -3,6 +3,7 @@ import { db } from "../db";
 import { account, session, user } from "../db/schema";
 import { comparePassword, hashPassword } from "../utils/bcrypt";
 import { v6 as uuid } from "uuid";
+import { CachedData, setSessionCache } from "./cache-sevice";
 
 export const getUserByEmail = async (email: string) => {
   const existingUser = await db
@@ -50,7 +51,7 @@ export const isPasswordCorrect = async (password : string, userId : string)  => 
   return isMatch;
 }
 
-export const cleanUpOldSessions = async (userId : string) => {
+export const cleanUpOldSessionsFromDb = async (userId : string) => {
   try {
     await db.delete(session).where(eq(session.userId, userId));
   } catch (error) {
@@ -70,6 +71,14 @@ export const createSession = async (
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
 
+  const sessionData: CachedData = {
+    userId,
+    token,
+    expiresAt: expiresAt.toISOString(),
+  };
+
+  await setSessionCache(sessionData);
+
   const newSession = await  db.insert(session).values({
     id : sessionId,
     token,
@@ -77,7 +86,7 @@ export const createSession = async (
     userAgent,
     expiresAt,
     userId
-  })
+  }).returning();
 
   return newSession;
 }

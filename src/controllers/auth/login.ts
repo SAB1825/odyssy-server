@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { loginSchema } from "../../validators/auth-validator";
-import { cleanUpOldSessions, createSession, getUserByEmail, isPasswordCorrect } from "../../service/auth-service";
+import { cleanUpOldSessionsFromDb, createSession, getUserByEmail, isPasswordCorrect } from "../../service/auth-service";
 import { AppError } from "../../utils/app-error";
 import { errorMessage } from "../../config/error-messages";
 import { HTTPSTATUS } from "../../config/http-codes";
@@ -48,7 +48,7 @@ export const loginController = async (req: Request, res: Response) => {
     const ipAddress  = req.ip;
     const userAgent = req.get("User-Agent") || "";
 
-    await cleanUpOldSessions(existingUser.id);
+    await cleanUpOldSessionsFromDb(existingUser.id);
 
     const token = uuid({
         random: crypto.getRandomValues(new Uint8Array(32))
