@@ -1,4 +1,5 @@
 /// <reference path="../types/global.d.ts" />
+
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../utils/app-error";
 import { errorMessage } from "../config/error-messages";
@@ -7,7 +8,6 @@ import { db } from "../db";
 import { session } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { cleanUpOldSessionsFromDb, createSession } from "../service/auth-service";
-import { v4 as uuid } from "uuid";
 import { deleteSessionCache, getSessionCache, setSessionCache } from "../service/cache-sevice";
 
 export const authMiddleware = async (
