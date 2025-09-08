@@ -15,6 +15,7 @@ import {
 } from "../../service/email-service";
 import { setVerificationTokenCache } from "../../service/cache-sevice";
 import { VERIFICATION_IDENTIFIER } from "../../utils/contanst";
+import { sendSuccess } from "../../utils/response-handler";
 
 export const registerController = async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
@@ -50,13 +51,13 @@ export const registerController = async (req: Request, res: Response) => {
 
     const newUser = await createUser(body.name, body.email, body.password);
 
-    return res.status(HTTPSTATUS.CREATED).json({
-      status: "success",
-      message: "User registered successfully",
-      data: {
+    return sendSuccess(
+      res,
+      "User registered successfully, please verify your email to activate your account",
+      {
         user: newUser,
-      },
-    });
+      }
+    );
   } catch (error) {
     if (error instanceof ZodError) {
       throw new AppError(
