@@ -4,8 +4,17 @@ import { AppError } from "../../utils/app-error";
 import { HTTPSTATUS } from "../../config/http-codes";
 import { errorMessage } from "../../config/error-messages";
 import { ZodError } from "zod";
-import { createUser, getUserByEmail } from "../../service/auth-service";
-import { sendVerificationEmail } from "../../service/email-service";
+import {
+  createEmailVerification,
+  createUser,
+  getUserByEmail,
+} from "../../service/auth-service";
+import {
+  createVerificationToken,
+  sendVerificationEmail,
+} from "../../service/email-service";
+import { setVerificationTokenCache } from "../../service/cache-sevice";
+import { VERIFICATION_IDENTIFIER } from "../../utils/contanst";
 
 export const registerController = async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
@@ -15,7 +24,7 @@ export const registerController = async (req: Request, res: Response) => {
       email,
       password,
     });
-    
+
     const existingUser = await getUserByEmail(body.email);
 
     if (existingUser) {
@@ -24,9 +33,20 @@ export const registerController = async (req: Request, res: Response) => {
         HTTPSTATUS.BAD_REQUEST,
         "AUTH_ERROR"
       );
-    };
+    }
 
-    await sendVerificationEmail(body.email);
+    const token = await sendVerificationEmail(body.email);
+
+    //CREATE IN DB
+    const newVerification = await createEmailVerification(token);
+
+    // CACHING THE VERIFICATION TOKEN
+    await setVerificationTokenCache({
+      expiresAt: newVerification[0].expiresAt.toISOString(),
+      email: body.email,
+      identifier: VERIFICATION_IDENTIFIER.EMAIL_VERIFICATION,
+      token,
+    });
 
     const newUser = await createUser(body.name, body.email, body.password);
 

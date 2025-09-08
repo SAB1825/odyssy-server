@@ -1,8 +1,13 @@
-import { SignJWT } from "jose"
+import { SignJWT, jwtVerify } from "jose"
+
+interface JWTPayload {
+    email : string;
+    [key: string]: any; // Add index signature for jose compatibility
+}
 
 
 export const signJWT = async (
-    payload : any,
+    payload : JWTPayload,
     secret : string,
     expiresIn : number = 3600
 ) : Promise<string> => {
@@ -15,6 +20,15 @@ export const signJWT = async (
 
     return jwt
 }
-export const generateTokens = async (userId : string, email : string) => {
 
+export const verifyJWT = async (
+    token : string,
+    secret : string
+) => {
+    try {
+        const { payload } = await jwtVerify(token, new TextEncoder().encode(secret))  as {payload : JWTPayload};
+        return payload;
+    } catch (error) {
+        throw new Error("Invalid token");
+    }
 }

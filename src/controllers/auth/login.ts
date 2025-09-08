@@ -5,6 +5,7 @@ import { AppError } from "../../utils/app-error";
 import { errorMessage } from "../../config/error-messages";
 import { HTTPSTATUS } from "../../config/http-codes";
 import { v6 as uuid } from "uuid";
+import { sendSuccess } from "../../utils/response-handler";
 
 export const loginController = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -43,8 +44,6 @@ export const loginController = async (req: Request, res: Response) => {
       );
     };
 
-    //CREATE : SESSION
-
     const ipAddress  = req.ip;
     const userAgent = req.get("User-Agent") || "";
 
@@ -68,10 +67,23 @@ export const loginController = async (req: Request, res: Response) => {
         maxAge: 7 * 24 * 60 * 60 * 1000,
     })
 
-    return res.status(HTTPSTATUS.OK).json({
-      status: "success",
-      message: "User logged in successfully",
-    })
+    return sendSuccess(
+      res,
+      "User logged in successfully",
+      {
+        user: {
+          id: existingUser.id,
+          email: existingUser.email,
+          name: existingUser.name,
+          emailVerified: existingUser.emailVerified
+        },
+        session: {
+          token,
+          expiresAt: session[0].expiresAt
+        }
+      },
+      HTTPSTATUS.OK
+    );
 
   } catch (error) {
     throw error;

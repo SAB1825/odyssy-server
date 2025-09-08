@@ -1,9 +1,10 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
-import { account, session, user } from "../db/schema";
+import { account, session, user, verification } from "../db/schema";
 import { comparePassword, hashPassword } from "../utils/bcrypt";
 import { v6 as uuid } from "uuid";
 import { CachedData, setSessionCache } from "./cache-sevice";
+import { VERIFICATION_IDENTIFIER } from "../utils/contanst";
 
 export const getUserByEmail = async (email: string) => {
   const existingUser = await db
@@ -101,3 +102,24 @@ export const getUserById = async (userId : string) => {
   }
 }
 
+
+export const createEmailVerification = async (token: string) => {
+
+  try {
+    const verificationId = uuid();
+    const expiresAt = new Date();
+    expiresAt.setTime(expiresAt.getTime() + 10 * 60 * 1000); 
+    const newVerification = await db.insert(verification).values({
+      id: verificationId,
+      identifier: VERIFICATION_IDENTIFIER.EMAIL_VERIFICATION,
+      value: token,
+      expiresAt,
+    }).returning();
+    
+    return newVerification;
+  } catch (error) {
+    console.error("Error creating email verification:", error);
+    throw new Error("Failed to create email verification");
+  }
+
+};

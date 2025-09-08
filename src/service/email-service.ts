@@ -18,6 +18,8 @@ export const createVerificationToken = async (
   return token;
 };
 
+
+
 export const sendVerificationEmail = async (email: string) => {
   try {
     const token = await createVerificationToken(Env.JWT_SECRET, email, 600000);
@@ -30,6 +32,8 @@ export const sendVerificationEmail = async (email: string) => {
       subject: "Verify your email",
       html: `<p>Click <a href="${url}">here</a> to verify your email. This link will expire in 10 minutes.</p>`,
     });
+
+    return token;
   } catch (error) {
     console.error("Error sending verification email:", error);
     throw new Error("Failed to send verification email");

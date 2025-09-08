@@ -1,10 +1,20 @@
 import redis from "../utils/redis-client";
 
 const SESSION_PREFIX = "session:";
-const SESSION_TTL = 7 * 24 * 60 * 60; 
+const SESSION_TTL = 7 * 24 * 60 * 60;
+
+const VERIFICATION_PREFIX = "verify:";
+const VERIFICATION_TTL = 10 * 60;
 
 export interface CachedData {
   userId: string;
+  token: string;
+  expiresAt: string;
+}
+
+export interface VerificationData {
+  email: string;
+  identifier: string;
   token: string;
   expiresAt: string;
 }
@@ -39,5 +49,43 @@ export const deleteSessionCache = async (token: string): Promise<void> => {
     await redis.del(`${SESSION_PREFIX}${token}`);
   } catch (error) {
     console.error("Error deleting session from cache:", error);
+  }
+};
+
+export const setVerificationTokenCache = async (
+  data: VerificationData
+): Promise<void> => {
+  try {
+    await redis.setex(
+      `${VERIFICATION_PREFIX}${data.token}`,
+      VERIFICATION_TTL,
+      JSON.stringify(data)
+    );
+  } catch (error) {
+    console.error("Error setting verification token in cache:", error);
+  }
+};
+
+export const getVerificationTokenCache = async (
+  token: string
+
+): Promise<VerificationData | null> => {
+  try {
+    const cache = await redis.get(`${VERIFICATION_PREFIX}${token}`);
+    if (!cache) return null;
+    return JSON.parse(cache) as VerificationData;
+  } catch (error) {
+    console.error("Error getting verification token from cache:", error);
+    return null;
+  }
+};
+
+export const deleteVerificationTokenCache = async (
+  token: string
+): Promise<void> => {
+  try {
+    await redis.del(`${VERIFICATION_PREFIX}${token}`);
+  } catch (error) {
+    console.error("Error deleting verification token from cache:", error);
   }
 };

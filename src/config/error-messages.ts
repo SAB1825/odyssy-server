@@ -34,6 +34,15 @@ export const errorMessages = () => ( {
 	USER_ALREADY_HAS_PASSWORD:
 		"User already has a password. Provide that to delete the account.",
 	UNAUTHORIZED: "Unauthorized. Please login to perform this action.",
+	EXPIRED_TOKEN: "Token has expired",
+
+	// EMAIL VERIFICATION SPECIFIC ERRORS
+	INVALID_VERIFICATION_LINK: "Invalid or expired verification link",
+	VERIFICATION_TOKEN_EXPIRED: "Verification link has expired. Please request a new one.",
+	EMAIL_ALREADY_VERIFIED: "Email address is already verified",
+	VERIFICATION_TOKEN_NOT_FOUND: "Verification token not found or has been used",
+	EMAIL_MISMATCH_IN_TOKEN: "The email in the verification link does not match the provided email",
+	INVALID_VERIFICATION_FORMAT: "Invalid verification link format",
 })
 export const errorMessage = errorMessages();
 export type errorMessagesType = typeof errorMessage[keyof typeof errorMessage];
