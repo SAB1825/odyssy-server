@@ -3,6 +3,7 @@ import { verifyEmailSchema } from "../../validators/auth-validator";
 import {
   deleteVerificationTokenCache,
   getVerificationTokenCache,
+  userCache,
 } from "../../service/cache-sevice";
 import { user, verification } from "../../db/schema";
 import { db } from "../../db";
@@ -20,13 +21,11 @@ export const verifyEmailController = async (req: Request, res: Response) => {
   const { token, email } = req.query;
 
   try {
-    // Input validation
     const query = verifyEmailSchema.parse({
       token,
       email: email?.toString().toLowerCase().trim(),
     });
 
-    // JWT verification
     let jwtPayload;
     try {
       jwtPayload = await verifyJWT(query.token, Env.JWT_SECRET);
@@ -38,7 +37,6 @@ export const verifyEmailController = async (req: Request, res: Response) => {
       );
     }
 
-    // Email match validation
     if (jwtPayload.email !== query.email) {
       throw new AppError(
         errorMessage.EMAIL_MISMATCH_IN_TOKEN,
@@ -47,10 +45,8 @@ export const verifyEmailController = async (req: Request, res: Response) => {
       );
     }
 
-    // Check cache first
     let emailVerification = await getVerificationTokenCache(query.token);
 
-    // Fallback to database if not in cache
     if (!emailVerification) {
       const dbVerification = await db
         .select()
@@ -73,7 +69,6 @@ export const verifyEmailController = async (req: Request, res: Response) => {
       };
     }
 
-    // Validate token identifier
     if (
       emailVerification.identifier !==
       VERIFICATION_IDENTIFIER.EMAIL_VERIFICATION
@@ -85,9 +80,7 @@ export const verifyEmailController = async (req: Request, res: Response) => {
       );
     }
 
-    // Check token expiration
     if (new Date(emailVerification.expiresAt) < new Date()) {
-      // Clean up expired tokens
       await Promise.all([
         deleteVerificationTokenCache(query.token),
         db.delete(verification).where(eq(verification.value, query.token)),
@@ -100,7 +93,6 @@ export const verifyEmailController = async (req: Request, res: Response) => {
       );
     }
 
-    // Check if user exists
     const existingUser = await db
       .select()
       .from(user)
@@ -114,9 +106,7 @@ export const verifyEmailController = async (req: Request, res: Response) => {
       );
     }
 
-    // Check if email is already verified
     if (existingUser[0].emailVerified) {
-      // Clean up tokens since email is already verified
       await Promise.all([
         deleteVerificationTokenCache(query.token),
         db.delete(verification).where(eq(verification.value, query.token)),
@@ -133,22 +123,23 @@ export const verifyEmailController = async (req: Request, res: Response) => {
       );
     }
 
-    // Perform email verification in transaction
-    await db.transaction(async (tx) => {
-      await tx
+      await db
         .update(user)
         .set({
           emailVerified: true,
         })
         .where(eq(user.email, emailVerification.email));
 
-      await tx.delete(verification).where(eq(verification.value, query.token));
-    });
+      await db.delete(verification).where(eq(verification.value, query.token));
 
-    // Clean up cache
+      await userCache({
+        id : existingUser[0].id,
+        email : existingUser[0].email,
+        name : existingUser[0].name,
+        emailVerified : true
+      })
+
     await deleteVerificationTokenCache(query.token);
-
-    // Log successful verification
     console.info(`Email verified successfully for: ${emailVerification.email}`);
 
     return sendSuccess(
@@ -162,7 +153,6 @@ export const verifyEmailController = async (req: Request, res: Response) => {
     );
 
   } catch (error) {
-    // Handle Zod validation errors
     if (error instanceof ZodError) {
       throw new AppError(
         errorMessage.INVALID_VERIFICATION_FORMAT,
@@ -171,7 +161,6 @@ export const verifyEmailController = async (req: Request, res: Response) => {
       );
     }
 
-    // Re-throw AppError instances to be handled by global error handler
     throw error;
   }
 };

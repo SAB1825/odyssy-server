@@ -124,5 +124,4 @@ export const createVerification = async (
     console.error("Error creating email verification:", error);
     throw new Error("Failed to create email verification");
   }
-
 };

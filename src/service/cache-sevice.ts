@@ -6,6 +6,9 @@ const SESSION_TTL = 7 * 24 * 60 * 60;
 const VERIFICATION_PREFIX = "verify:";
 const VERIFICATION_TTL = 10 * 60;
 
+const USER_PREFIX = "user:";
+const USER_TTL = 7 * 24 * 60 * 60;
+
 export interface CachedData {
   userId: string;
   token: string;
@@ -18,6 +21,13 @@ export interface VerificationData {
   identifier: string;
   token: string;
   expiresAt: string;
+}
+
+export interface UserData {
+  id : string;
+  name : string;
+  email : string;
+  emailVerified : boolean;
 }
 
 export const getSessionCache = async (
@@ -90,3 +100,15 @@ export const deleteVerificationTokenCache = async (
     console.error("Error deleting verification token from cache:", error);
   }
 };
+
+
+export const userCache = async (
+  data : UserData
+) => {
+  try {
+    const userId = data.id;
+    await redis.setex(`${USER_PREFIX}${userId}`, USER_TTL, JSON.stringify(data));
+  } catch (error) {
+    console.error("Error setting user in cache:", error);
+  }
+}

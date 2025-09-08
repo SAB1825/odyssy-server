@@ -86,35 +86,20 @@ export const authMiddleware = async (
       new Date(expiresAt).getTime() - Date.now() < 1 * 24 * 60 * 60 * 1000
     ) {
 
-      await cleanUpOldSessionsFromDb(currSession?.userId);
+      const newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-      const token = uuid();
-
-      newSession = await createSession(
-        token,
-        currSession?.userId,
-        req.ip as string,
-        req.headers["user-agent"] as string
-      );
-      
-      await deleteSessionCache(currSession.token);
-      
       await setSessionCache({
-        token: newSession[0].token,
-        expiresAt: newSession[0].expiresAt?.toISOString() || "",
-        userId: newSession[0].userId,
-      })
-
-
-      res.cookie("odyssy_session_token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        expires: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000),
+        token: currSession.token,
+        userId: currSession.userId,
+        expiresAt: newExpiresAt.toISOString()
       });
+
+      await db.update(session).set({
+        expiresAt: newExpiresAt
+      }).where(eq(session.token, currSession.token));
     }
 
-    const userId = newSession ? newSession[0].userId : currSession?.userId;
+    const userId =  currSession?.userId;
     req.userId = userId;
     next();
   } catch (error) {
