@@ -103,7 +103,10 @@ export const getUserById = async (userId : string) => {
 }
 
 
-export const createEmailVerification = async (token: string) => {
+export const createVerification = async (
+  token: string,
+  identifier : string
+) => {
 
   try {
     const verificationId = uuid();
@@ -111,7 +114,7 @@ export const createEmailVerification = async (token: string) => {
     expiresAt.setTime(expiresAt.getTime() + 10 * 60 * 1000); 
     const newVerification = await db.insert(verification).values({
       id: verificationId,
-      identifier: VERIFICATION_IDENTIFIER.EMAIL_VERIFICATION,
+      identifier,
       value: token,
       expiresAt,
     }).returning();

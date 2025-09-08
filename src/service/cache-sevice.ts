@@ -14,6 +14,7 @@ export interface CachedData {
 
 export interface VerificationData {
   email: string;
+  userId?: string;
   identifier: string;
   token: string;
   expiresAt: string;

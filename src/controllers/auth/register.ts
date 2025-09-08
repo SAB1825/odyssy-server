@@ -5,7 +5,7 @@ import { HTTPSTATUS } from "../../config/http-codes";
 import { errorMessage } from "../../config/error-messages";
 import { ZodError } from "zod";
 import {
-  createEmailVerification,
+  createVerification,
   createUser,
   getUserByEmail,
 } from "../../service/auth-service";
@@ -39,7 +39,10 @@ export const registerController = async (req: Request, res: Response) => {
     const token = await sendVerificationEmail(body.email);
 
     //CREATE IN DB
-    const newVerification = await createEmailVerification(token);
+    const newVerification = await createVerification(
+      token,
+      VERIFICATION_IDENTIFIER.EMAIL_VERIFICATION
+    );
 
     // CACHING THE VERIFICATION TOKEN
     await setVerificationTokenCache({
