@@ -1,13 +1,16 @@
 import redis from "../utils/redis-client";
 
 const SESSION_PREFIX = "session:";
-const SESSION_TTL = 7 * 24 * 60 * 60;
+const SESSION_TTL = 7 * 24 * 60 * 60; // 7 days
 
 const VERIFICATION_PREFIX = "verify:";
-const VERIFICATION_TTL = 10 * 60;
+const VERIFICATION_TTL = 10 * 60; // 10 minutes
 
 const USER_PREFIX = "user:";
-const USER_TTL = 7 * 24 * 60 * 60;
+const USER_TTL = 7 * 24 * 60 * 60; // 7 days
+
+const CODE_PREFIX = "code:";
+const CODE_TTL = 1 * 60 * 60; // 1 hour
 
 export interface CachedData {
   userId: string;
@@ -29,6 +32,17 @@ export interface UserData {
   email : string;
   emailVerified : boolean;
 }
+
+
+
+export interface CodeData {
+  codeHash : string;
+  success: boolean;
+  output: string;
+  error?: string;
+  executionTime: number;
+}
+
 
 export const getSessionCache = async (
   token: string
@@ -101,7 +115,6 @@ export const deleteVerificationTokenCache = async (
   }
 };
 
-
 export const userCache = async (
   data : UserData
 ) => {
@@ -110,5 +123,32 @@ export const userCache = async (
     await redis.setex(`${USER_PREFIX}${userId}`, USER_TTL, JSON.stringify(data));
   } catch (error) {
     console.error("Error setting user in cache:", error);
+  }
+}
+
+export const setCodeCache = async (data : CodeData) => {
+  try {
+    await redis.setex(`${CODE_PREFIX}${data.codeHash}`, CODE_TTL, JSON.stringify(data));
+  } catch (error) {
+    console.error("Error setting code in cache:", error);
+  }
+}
+
+export const getCodeCache = async (codeHash : string) : Promise<CodeData | null> => {
+  try {
+    const cache = await redis.get(`${CODE_PREFIX}${codeHash}`);
+    if (!cache) return null;
+    return JSON.parse(cache) as CodeData;
+  } catch (error) {
+    console.error("Error getting code from cache:", error);
+    return null;
+  }
+}
+
+export const deleteCodeCache = async (codeHash : string) => {
+  try {
+    await redis.del(`${CODE_PREFIX}${codeHash}`);
+  } catch (error) {
+    console.error("Error deleting code from cache:", error);
   }
 }

@@ -59,3 +59,15 @@ export const verification = pgTable("verification", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+export const savedCodes  = pgTable("code_submission", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  submissionId: text("submission_id").notNull().unique(),
+  language: text("language").notNull(),
+  output: text("output").notNull(),
+});
+
+

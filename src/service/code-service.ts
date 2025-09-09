@@ -6,6 +6,8 @@
 // 5. STORE THE SUBMITTED CODE AND RESULTS IN DB 
 
 
+// DONE : 1
+
 
 
 
@@ -14,7 +16,8 @@ import { unlinkSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { promisify } from "util";
 import { v4 as uuid } from "uuid";
 import path from "path";
-import { CANCELLED } from "dns";
+import { generateCodeHash } from "../utils/crypto";
+import { getCodeCache, setCodeCache } from "./cache-sevice";
 
 const execPromise = promisify(exec);
 
@@ -34,24 +37,52 @@ const escapePath = (filePath: string): string => {
   return `"${filePath.replace(/\\/g, "/")}"`;
 };
 
+
+
 export const executeCode = async (code: string, language: string): Promise<ExecutionResult> => {
   const startTime = Date.now();
   const fileId = uuid();
+
+  const hashedCode = generateCodeHash(code, language);
+
+  let cacheCode = await getCodeCache(hashedCode);
+  if(cacheCode) {
+    return {
+      success: true,
+      output: cacheCode.output,
+      error: cacheCode.error,
+      executionTime: cacheCode.executionTime
+    }
+  }
+
   
+
   try {
+    let result
     switch (language.toLowerCase()) {
       case 'c':
-        return await executeCCode(code, fileId);
+        result =  await executeCCode(code, fileId);
+        break;
       case 'cpp':
       case 'c++':
-        return await executeCppCode(code, fileId);
+        result =  await executeCppCode(code, fileId);
+        break;
       case 'java':
-        return await executeJavaCodeInternal(code, fileId);
+        result =  await executeJavaCodeInternal(code, fileId);
+        break;
       case 'python':
-        return await executePythonCode(code, fileId);
+        result =  await executePythonCode(code, fileId);
+        break;
       default:
         throw new Error(`Unsupported language: ${language}`);
     }
+
+    await setCodeCache({
+      codeHash: hashedCode,
+      ...result
+    })
+
+    return result;
   } catch (error) {
     const executionTime = Date.now() - startTime;
     return {
@@ -64,7 +95,7 @@ export const executeCode = async (code: string, language: string): Promise<Execu
 };
 
 
-// JUST AN HELPER FUNCTION FOR CODE FORMATTING
+// JUST AN HELPER FUNCTION FOR CODE FORMATTING 
 const formatCCode = (code: string): string => {
   if (!code.includes('\n') && code.includes('#include')) {
     let formatted = code
