@@ -5,18 +5,22 @@ import { HTTPSTATUS } from "../../config/http-codes";
 import { AppError } from "../../utils/app-error";
 import { ZodError } from "zod";
 import { z } from "zod";
+import { publishCodeExecution } from "../../workers/queue/publisher";
+import { createCodeSnippet } from "../../service/snippet-service";
 
 const executeCodeSchema = z.object({
   code: z.string().min(1, "Code is required").max(10000, "Code is too long"),
   language: z.enum(["c", "cpp", "c++", "java", "python", "javascript", "js"])
     .refine((val) => ["c", "cpp", "c++", "java", "python", "javascript", "js"].includes(val), {
       message: "Unsupported language"
-    })
+    }),
+  isQueue : z.boolean().optional()
 });
 
 export const executeCodeController = async (req: Request, res: Response) => {
   try {
-    const { code, language } = executeCodeSchema.parse(req.body);
+    const userId = req.userId as string;
+    const { code, language, isQueue } = executeCodeSchema.parse(req.body);
 
     if (code.includes("rm -rf") || code.includes("format") || code.includes("system(")) {
       throw new AppError(
@@ -25,22 +29,32 @@ export const executeCodeController = async (req: Request, res: Response) => {
         "SECURITY_ERROR"
       );
     }
+    
+    const jobId = await publishCodeExecution({
+      code,
+      language,
+      userId
+    }) as string;
 
-    const result = await executeCode(code, language);
-
+    const codeSnippet = await createCodeSnippet({
+      code,
+      language,
+      userId,
+      jobId,
+      status: "queued"
+    });
+   
     return sendSuccess(
       res,
-      result.success ? "Code executed successfully" : "Code execution failed",
+      `Job queued successfully`,
       {
-        output: result.output,
-        error: result.error,
-        executionTime: result.executionTime,
-        language,
-        success: result.success
-      },
-      result.success ? HTTPSTATUS.OK : HTTPSTATUS.BAD_REQUEST
-    );
+         jobId,
+         status: "queued",
+         codeSnippet
+      }
+    )
 
+    
   } catch (error) {
     if (error instanceof ZodError) {
       throw new AppError(

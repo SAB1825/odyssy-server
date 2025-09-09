@@ -60,14 +60,15 @@ export const verification = pgTable("verification", {
     .notNull(),
 });
 
-export const savedCodes  = pgTable("code_submission", {
+export const savedCodes = pgTable("code_submission", {
   id: text("id").primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  submissionId: text("submission_id").notNull().unique(),
+  jobId: text("submission_id").notNull().unique(),
+  code : text("code"),
+  status: text("status").default("queued"),
   language: text("language").notNull(),
-  output: text("output").notNull(),
+  output: text("output"),
+  timeTaken: text("timetaken"),
 });
-
-

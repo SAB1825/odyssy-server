@@ -9,6 +9,9 @@ export const ENV_CONFIG = () => ({
     PUBLIC_URL : getEnv("PUBLIC_URL", "http://localhost:3000"),
     REDIS_HOST : getEnv("REDIS_HOST", "localhost"),
     REDIS_PORT : getEnv("REDIS_PORT", "6379"),
+
+    RABBITMQ_URL : getEnv("RABBITMQ_URL", "amqp://localhost"),
+    QUEUE_NAME : getEnv("QUEUE_NAME", "code_execution_queue")
 });
 
 export const Env = ENV_CONFIG()
