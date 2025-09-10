@@ -1,18 +1,49 @@
+// interfaces/queue.ts
 
-
-export interface ICodePublisherData {
-    userId : string;
-    code : string;
-    language : string;
-    code_snippet_id? : string;
+export interface CodeExecutionJob {
+  id: string;
+  userId: string;
+  code: string;
+  language: string;
+  codeSnippetId?: string;
+  timestamp: number;
+  priority?: number;
 }
 
-export interface ICodeExecutionJob {
-     id: string
-      userId : string
-      code: string
-      language: string
-      codeSnippetId?: string | null
-      timestamp: Date
+export interface JobResult {
+  jobId: string;
+  success: boolean;
+  output: string;
+  error?: string;
+  executionTime: number;
+  completedAt: Date;
 }
 
+export interface ExecutionRequest {
+  code: string;
+  language: string;
+  userId: string;
+  codeSnippetId?: string;
+}
+
+export interface ExecutionResult {
+  success: boolean;
+  output: string;
+  error?: string;
+  executionTime: number;
+  codeSnippetId?: string;
+  fromCache?: boolean;
+}
+
+export interface QueueConfig {
+  url: string;
+  queueName: string;
+  durable: boolean;
+  prefetch: number;
+}
+
+export interface ConnectionState {
+  connection: any;
+  channel: any;
+  isConnected: boolean;
+}

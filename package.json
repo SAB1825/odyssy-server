@@ -7,6 +7,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "docker:up": "docker-compose up -d redis rabbitmq",
+    "dev:worker" : "ts-node src/workers/script.ts",
     "dev": "pnpm docker:up && nodemon src/server.ts",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"

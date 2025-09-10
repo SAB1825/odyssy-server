@@ -5,8 +5,8 @@ import { HTTPSTATUS } from "../../config/http-codes";
 import { AppError } from "../../utils/app-error";
 import { ZodError } from "zod";
 import { z } from "zod";
-import { publishCodeExecution } from "../../workers/queue/publisher";
 import { createCodeSnippet } from "../../service/snippet-service";
+import { queueCodeExecution } from "../../workers/queue";
 
 const executeCodeSchema = z.object({
   code: z.string().min(1, "Code is required").max(10000, "Code is too long"),
@@ -30,11 +30,12 @@ export const executeCodeController = async (req: Request, res: Response) => {
       );
     }
     
-    const jobId = await publishCodeExecution({
+    
+    const jobId = await queueCodeExecution(
+      userId,
       code,
       language,
-      userId
-    }) as string;
+    )
 
     const codeSnippet = await createCodeSnippet({
       code,
@@ -43,6 +44,7 @@ export const executeCodeController = async (req: Request, res: Response) => {
       jobId,
       status: "queued"
     });
+    
    
     return sendSuccess(
       res,

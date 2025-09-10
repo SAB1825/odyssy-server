@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import { sendSuccess } from "../../utils/response-handler";
 
 export const getJobStatusController = async (req: Request, res: Response) => {
-  const { jobId } = req.query; // Change from req.body to req.query for GET requests
+  const { jobId } = req.body; 
   
   try {
     if (!jobId || typeof jobId !== 'string') {
