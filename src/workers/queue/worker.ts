@@ -15,7 +15,6 @@ export async function connectWorker(): Promise<void> {
   try {
     connection = await amqplibp.connect(Env.RABBITMQ_URL);
     
-    // Handle connection events
     connection.on('error', (err: any) => {
       console.error('[WORKER]: Connection error:', err);
       isConnected = false;
@@ -30,7 +29,6 @@ export async function connectWorker(): Promise<void> {
 
     channel = await connection.createChannel();
     
-    // Handle channel events
     channel?.on('error', (err: any) => {
       console.error('[WORKER]: Channel error:', err);
     });
@@ -68,7 +66,6 @@ export const startProcessing = async () => {
       job = JSON.parse(msg.content.toString());
       console.log(`[WORKER]: Processing job ${job.id}...`);
 
-      // Update status to processing
       await updateCodeSnippet(job.id, "processing", "", "0");
 
       const result = await executeCode(job.code, job.language);
@@ -88,8 +85,7 @@ export const startProcessing = async () => {
       console.log(`[WORKER]: Job ${job.id} completed in ${totalTime}ms`);
     } catch (error) {
       console.log("[WORKER]: Error processing job", error);
-      
-      // Update job status to failed
+``      
       try {
         if (job!) {
           await updateCodeSnippet(job.id, "failed", `Error: ${error instanceof Error ? error.message : 'Unknown error'}`, "0");
@@ -98,7 +94,6 @@ export const startProcessing = async () => {
         console.log("[WORKER]: Failed to update job status after error", updateError);
       }
       
-      // Acknowledge message to remove it from queue
       channel.nack(msg, false, false);
     }
   });
