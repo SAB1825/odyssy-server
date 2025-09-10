@@ -13,6 +13,8 @@ export interface CodeExecutionJob {
 export interface JobResult {
   jobId: string;
   success: boolean;
+  code : string;
+  language : string;
   output: string;
   error?: string;
   executionTime: number;

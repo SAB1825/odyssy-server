@@ -1,4 +1,5 @@
 import redis from "../utils/redis-client";
+import { redisLogger } from "../utils/winston";
 
 const SESSION_PREFIX = "session:";
 const SESSION_TTL = 7 * 24 * 60 * 60; // 7 days
@@ -36,11 +37,13 @@ export interface UserData {
 
 
 export interface CodeData {
+  jobId? : string;
   codeHash : string;
   success: boolean;
-  output: string;
+  output?: string;
   error?: string;
-  executionTime: number;
+  status? : string;
+  executionTime?: number;
 }
 
 
@@ -150,5 +153,28 @@ export const deleteCodeCache = async (codeHash : string) => {
     await redis.del(`${CODE_PREFIX}${codeHash}`);
   } catch (error) {
     console.error("Error deleting code from cache:", error);
+  }
+}
+
+export const setOutputCache = async (codeHash : string, output : string, status : string) => {
+  try {
+    const data =  {
+      output,
+      status
+    }
+    await redis.setex(`${CODE_PREFIX}${codeHash}`, CODE_TTL, JSON.stringify(data))
+  }catch(e) {
+    redisLogger.error("Error While setuping up cache.")
+  }
+}
+
+export const getOutputCache = async (codeHash : string)  => {
+  try {
+    const cache = await redis.get(`${CODE_PREFIX}${codeHash}`);
+    if(!cache) return null;
+    const data = JSON.parse(cache) as {output: string, status: string};
+    return data;
+  } catch (error) {
+     redisLogger.error("Error While getting up cache.")
   }
 }

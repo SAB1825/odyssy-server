@@ -1,30 +1,27 @@
 import { Request, Response } from "express";
 import { AppError } from "../../utils/app-error";
-import { errorMessage } from "../../config/error-messages";
 import { HTTPSTATUS } from "../../config/http-codes";
 import { db } from "../../db";
 import { savedCodes } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { sendSuccess } from "../../utils/response-handler";
+import { getCodeCache } from "../../service/cache-sevice";
 
 export const getJobStatusController = async (req: Request, res: Response) => {
-  const { jobId } = req.body; 
+  const { codeToken } = req.body; 
   
   try {
-    if (!jobId || typeof jobId !== 'string') {
+    if (!codeToken || typeof codeToken !== 'string') {
       throw new AppError(
-        "Job ID is required",
+        "Code token required",
         HTTPSTATUS.BAD_REQUEST,
-        "JOB_STATUS_ERROR"
+        "CODE_ERROR"
       );
-    }
+    } 
     
-    const result = await db
-      .select()
-      .from(savedCodes)
-      .where(eq(savedCodes.jobId, jobId));
+    const result = await getCodeCache(codeToken)
 
-    if (!result || result.length === 0) {
+    if (!result) {
       throw new AppError("Job not found", HTTPSTATUS.NOT_FOUND, "CODE_ERROR");
     }
 
@@ -32,7 +29,7 @@ export const getJobStatusController = async (req: Request, res: Response) => {
         res,
         "Job status fetched successfully",
         {
-            job: result[0]
+            job: result
         }
     )
   } catch (error) {

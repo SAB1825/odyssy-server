@@ -7,14 +7,21 @@ import { ZodError } from "zod";
 import { z } from "zod";
 import { createCodeSnippet } from "../../service/snippet-service";
 import { queueCodeExecution } from "../../workers/queue";
+import { generateCodeHash } from "../../utils/crypto";
+import { getCodeCache, setCodeCache } from "../../service/cache-sevice";
 
 const executeCodeSchema = z.object({
   code: z.string().min(1, "Code is required").max(10000, "Code is too long"),
-  language: z.enum(["c", "cpp", "c++", "java", "python", "javascript", "js"])
-    .refine((val) => ["c", "cpp", "c++", "java", "python", "javascript", "js"].includes(val), {
-      message: "Unsupported language"
-    }),
-  isQueue : z.boolean().optional()
+  language: z
+    .enum(["c", "cpp", "c++", "java", "python", "javascript", "js"])
+    .refine(
+      (val) =>
+        ["c", "cpp", "c++", "java", "python", "javascript", "js"].includes(val),
+      {
+        message: "Unsupported language",
+      }
+    ),
+  isQueue: z.boolean().optional(),
 });
 
 export const executeCodeController = async (req: Request, res: Response) => {
@@ -22,41 +29,41 @@ export const executeCodeController = async (req: Request, res: Response) => {
     const userId = req.userId as string;
     const { code, language, isQueue } = executeCodeSchema.parse(req.body);
 
-    if (code.includes("rm -rf") || code.includes("format") || code.includes("system(")) {
+    const hashedCode = generateCodeHash(code, language);
+
+    let cacheCode = await getCodeCache(hashedCode);
+
+    if (cacheCode) {
+      return sendSuccess(res, "Code executed successfully (from cache)", {
+        data: cacheCode,
+      });
+    }
+
+    if (
+      code.includes("rm -rf") ||
+      code.includes("format") ||
+      code.includes("system(")
+    ) {
       throw new AppError(
         "Code contains potentially dangerous operations",
         HTTPSTATUS.BAD_REQUEST,
         "SECURITY_ERROR"
       );
     }
-    
-    
-    const jobId = await queueCodeExecution(
-      userId,
-      code,
-      language,
-    )
 
-    const codeSnippet = await createCodeSnippet({
-      code,
-      language,
-      userId,
+    const jobId = await queueCodeExecution(userId, code, language);
+    await setCodeCache({
+      codeHash : hashedCode,
       jobId,
-      status: "queued"
+      status : "QUEUED",
+      success : false
     });
-    
-   
-    return sendSuccess(
-      res,
-      `Job queued successfully`,
-      {
-         jobId,
-         status: "queued",
-         codeSnippet
-      }
-    )
 
-    
+    return sendSuccess(res, `Job queued successfully`, {
+      code_token : hashedCode,
+      status: "QUEUED",
+
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       throw new AppError(

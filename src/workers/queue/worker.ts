@@ -5,6 +5,8 @@ import { Env } from '../../config/env-config';
 import { workerLogger } from '../../utils/winston';
 import { executeCode } from '../../service/code-service';
 import { updateCodeSnippet } from '../../service/snippet-service';
+import { generateCodeHash } from '../../utils/crypto';
+import { setCodeCache } from '../../service/cache-sevice';
 
 let workerState: ConnectionState & { isProcessing: boolean } = {
   connection: null,
@@ -80,7 +82,9 @@ const executeJob = async (job: CodeExecutionJob): Promise<JobResult> => {
   );
 
   return {
+    code : job.code,
     jobId: job.id,
+    language : job.language,
     success: result.success,
     output: result.output,
     error: result.error,
@@ -93,12 +97,18 @@ const storeResult = async (result: JobResult): Promise<void> => {
   try {
     workerLogger.info(`Storing result for job ${result.jobId}`);
 
-    await updateCodeSnippet(
-      result.jobId,
-      "COMPLETED",
-      result.output,
-      result.executionTime.toString()
-    );
+    const codeHash = await generateCodeHash(result.code, result.language);
+
+    await setCodeCache(
+      {
+        codeHash ,
+        executionTime : result.executionTime,
+        error : result.error || undefined,
+        output : result.output,
+        success : true,
+        status : "COMPLETED"
+      }
+    )
 
   } catch (error) {
     workerLogger.error('Failed to store result:', error);

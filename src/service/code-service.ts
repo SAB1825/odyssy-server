@@ -43,19 +43,7 @@ export const executeCode = async (code: string, language: string): Promise<Execu
   const startTime = Date.now();
   const fileId = uuid();
 
-  const hashedCode = generateCodeHash(code, language);
 
-  let cacheCode = await getCodeCache(hashedCode);
-  if(cacheCode) {
-    return {
-      success: true,
-      output: cacheCode.output,
-      error: cacheCode.error,
-      executionTime: cacheCode.executionTime
-    }
-  }
-
-  
   try {
     let result
     switch (language.toLowerCase()) {
@@ -75,11 +63,6 @@ export const executeCode = async (code: string, language: string): Promise<Execu
       default:
         throw new Error(`Unsupported language: ${language}`);
     }
-
-    await setCodeCache({
-      codeHash: hashedCode,
-      ...result
-    })
 
     return result;
   } catch (error) {
