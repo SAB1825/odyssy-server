@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import { Env } from "../config/env-config";
+import { redisLogger } from "./winston";
 
 const redis = new Redis({
   host: Env.REDIS_HOST,
@@ -10,13 +11,11 @@ const redis = new Redis({
 });
 
 redis.on("connect", () => {
-  console.log(
-    `[Redis]: Connected to Redis server at ${Env.REDIS_HOST}:${Env.REDIS_PORT}`
-  );
+  redisLogger.info("Connected to Redis server");
 });
 
 redis.on("error", (err) => {
-  console.error("[Redis]: Error connecting to Redis server:", err);
+  redisLogger.error("Error connecting to Redis server:", err);
 });
 
 export default redis;

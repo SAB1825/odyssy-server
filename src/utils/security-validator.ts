@@ -1,26 +1,20 @@
-// Enhanced code security validation
 const DANGEROUS_PATTERNS = [
-  // File system operations
   /rm\s+-rf/gi,
   /del\s+\/[sf]/gi,
   /format\s+[a-z]:/gi,
   
-  // Network operations
   /wget|curl|fetch/gi,
   /socket|connect|bind/gi,
   
-  // System calls
   /system\s*\(/gi,
   /exec\s*\(/gi,
   /eval\s*\(/gi,
   /subprocess/gi,
   
-  // File operations
   /fopen|fwrite|fread/gi,
   /open\s*\(/gi,
   /write\s*\(/gi,
   
-  // Infinite loops (basic detection)
   /while\s*\(\s*true\s*\)/gi,
   /for\s*\(\s*;\s*;\s*\)/gi,
 ];

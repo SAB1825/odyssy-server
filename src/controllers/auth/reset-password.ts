@@ -35,12 +35,10 @@ export const resetPasswordController = async (req: Request, res: Response) => {
       password,
     });
 
-    console.log(data);
 
     let jwtPayload;
     try {
       jwtPayload = await verifyJWT(data.token, Env.JWT_SECRET);
-      console.log(jwtPayload);
     } catch (error) {
       throw new AppError(
         errorMessage.INVALID_VERIFICATION_LINK,

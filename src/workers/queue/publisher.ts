@@ -2,6 +2,7 @@ import { v4 as uuid } from "uuid";
 import { ICodeExecutionJob, ICodePublisherData } from "../interface";
 import { Env } from "../../config/env-config";
 import amqplibp from "amqplib";
+import { publisherLogger } from "../../utils/winston";
 
 let connection: any = null;
 let channel: amqplibp.Channel | null = null;
@@ -14,19 +15,19 @@ export async function QueuePublisher(): Promise<void> {
     connection = await amqplibp.connect(Env.RABBITMQ_URL);
     
     connection.on('error', (err: any) => {
-      console.error('[PUBLISHER]: Connection error:', err);
+      publisherLogger.error('Connection error:', err);
       isConnected = false;
     });
 
     connection.on('close', () => {
-      console.log('[PUBLISHER]: Connection closed');
+      publisherLogger.info('Connection closed');
       isConnected = false;
     });
 
     channel = await connection.createChannel();
     
     channel?.on('error', (err: any) => {
-      console.error('[PUBLISHER]: Channel error:', err);
+      publisherLogger.error('Channel error:', err);
     });
 
     await channel?.assertQueue(Env.QUEUE_NAME, {
@@ -34,9 +35,9 @@ export async function QueuePublisher(): Promise<void> {
     });
 
     isConnected = true;
-    console.log("🔨 Publisher connected to RabbitMQ");
+    publisherLogger.info("📢 Publisher connected to RabbitMQ");
   } catch (error) {
-    console.error('[PUBLISHER]: Failed to connect:', error);
+    publisherLogger.error('Failed to connect:', error);
     isConnected = false;
     throw error;
   }
@@ -71,10 +72,10 @@ export const publishCodeExecution = async (codeData: ICodePublisherData) => {
       throw new Error("Failed to publish job to the queue");
     }
     
-    console.log(`[PUBLISHER]: Job ${jobId} published to queue`);
+    publisherLogger.info(`Job ${jobId} published to the queue`);
     return jobId;
   } catch (error) {
-    console.error('[PUBLISHER]: Error publishing job:', error);
+    publisherLogger.error('Error publishing job:', error);
     throw new Error("Failed to publish job to the queue");
   }
 };

@@ -3,6 +3,7 @@ import { Env } from "../../config/env-config";
 import { ICodeExecutionJob } from "../interface";
 import { executeCode } from "../../service/code-service";
 import { updateCodeSnippet } from "../../service/snippet-service";
+import { workerLogger } from "../../utils/winston";
 
 let connection: any = null;
 let channel: amqplibp.Channel | null = null;
@@ -16,13 +17,13 @@ export async function connectWorker(): Promise<void> {
     connection = await amqplibp.connect(Env.RABBITMQ_URL);
     
     connection.on('error', (err: any) => {
-      console.error('[WORKER]: Connection error:', err);
+      workerLogger.error("Connection error:", err);
       isConnected = false;
       isProcessing = false;
     });
 
     connection.on('close', () => {
-      console.log('[WORKER]: Connection closed');
+      workerLogger.info('Connection closed');
       isConnected = false;
       isProcessing = false;
     });
@@ -30,7 +31,7 @@ export async function connectWorker(): Promise<void> {
     channel = await connection.createChannel();
     
     channel?.on('error', (err: any) => {
-      console.error('[WORKER]: Channel error:', err);
+      workerLogger.error('Channel error:', err);
     });
 
     await channel?.assertQueue(Env.QUEUE_NAME, {
@@ -40,9 +41,9 @@ export async function connectWorker(): Promise<void> {
     await channel?.prefetch(1);
 
     isConnected = true;
-    console.log("🔨 Worker connected to RabbitMQ");
+    workerLogger.info("🔨 Worker connected to RabbitMQ");
   } catch (error) {
-    console.error('[WORKER]: Failed to connect:', error);
+    workerLogger.error('Failed to connect:', error);
     isConnected = false;
     throw error;
   }
@@ -54,7 +55,7 @@ export const startProcessing = async () => {
   }
 
   isProcessing = true;
-  console.log("[WORKER]: Worker started processing jobs");
+  workerLogger.info("Worker started processing jobs");
 
   await channel.consume(Env.QUEUE_NAME, async (msg) => {
     if (!msg || !channel) return;
@@ -64,13 +65,10 @@ export const startProcessing = async () => {
     
     try {
       job = JSON.parse(msg.content.toString());
-      console.log(`[WORKER]: Processing job ${job.id}...`);
-
+      workerLogger.info(`[WORKER]: Processing job ${job.id}...`);
       await updateCodeSnippet(job.id, "processing", "", "0");
 
       const result = await executeCode(job.code, job.language);
-
-      console.log(result);
 
       await updateCodeSnippet(
         job.id, 
@@ -82,16 +80,15 @@ export const startProcessing = async () => {
       channel.ack(msg);
       const totalTime = Date.now() - startTime;
 
-      console.log(`[WORKER]: Job ${job.id} completed in ${totalTime}ms`);
+      workerLogger.info(`Job ${job.id} completed in ${totalTime}ms`);
     } catch (error) {
-      console.log("[WORKER]: Error processing job", error);
-``      
+      workerLogger.error("Error processing job:", error);
       try {
         if (job!) {
           await updateCodeSnippet(job.id, "failed", `Error: ${error instanceof Error ? error.message : 'Unknown error'}`, "0");
         }
       } catch (updateError) {
-        console.log("[WORKER]: Failed to update job status after error", updateError);
+        workerLogger.error("[WORKER]: Failed to update job status after error", updateError);
       }
       
       channel.nack(msg, false, false);
@@ -106,6 +103,6 @@ export const closeWorker = async () => {
         isProcessing = false;
         isConnected = false;
     } catch (error) {
-        console.log("[WORKER] : Error while stopping worker")
+        workerLogger.error("Error while stopping worker:", error);
     }
 }

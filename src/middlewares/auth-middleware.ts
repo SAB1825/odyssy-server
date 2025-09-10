@@ -9,6 +9,7 @@ import { session } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { cleanUpOldSessionsFromDb, createSession } from "../service/auth-service";
 import { deleteSessionCache, getSessionCache, setSessionCache } from "../service/cache-sevice";
+import { serverLogger } from "../utils/winston";
 
 export const authMiddleware = async (
   req: Request,
@@ -103,7 +104,7 @@ export const authMiddleware = async (
     req.userId = userId;
     next();
   } catch (error) {
-    console.log("Auth Middleware - Error:", error);
+    serverLogger.error("Auth middleware error:", error);
     next(error);
   }
 };

@@ -3,6 +3,7 @@ import { db } from "../db";
 import { savedCodes } from "../db/schema";
 import { v4 as uuid } from "uuid";
 import { eq } from "drizzle-orm";
+import { serverLogger } from "../utils/winston";
 
 interface creatCodeData {
   language: string;
@@ -23,7 +24,7 @@ export const createCodeSnippet = async (data: creatCodeData) => {
     }).returning();
     return codeSnippet
   } catch (error) {
-    console.log("Something went wrong when creating code snippet")
+    throw error;
   }
 };
 
@@ -37,7 +38,7 @@ export const updateCodeSnippet = async (jobId : string, status: string, output: 
     
     return updatedSnippet; // Return the actual result, not the function
   } catch (error) {
-    console.log("Error updating code snippet:", error);
+    serverLogger.error("Error updating code snippet:", error);
     throw error; // Re-throw the error instead of just logging
   }
 }
