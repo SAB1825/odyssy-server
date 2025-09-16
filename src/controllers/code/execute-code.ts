@@ -5,7 +5,6 @@ import { HTTPSTATUS } from "../../config/http-codes";
 import { AppError } from "../../utils/app-error";
 import { ZodError } from "zod";
 import { z } from "zod";
-import { createCodeSnippet } from "../../service/snippet-service";
 import { queueCodeExecution } from "../../workers/queue";
 import { generateCodeHash } from "../../utils/crypto";
 import { getCodeCache, setCodeCache } from "../../service/cache-sevice";

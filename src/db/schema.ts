@@ -60,15 +60,18 @@ export const verification = pgTable("verification", {
     .notNull(),
 });
 
-export const savedCodes = pgTable("code_submission", {
+
+export const api = pgTable("apiKeys", {
   id: text("id").primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  jobId: text("submission_id").notNull().unique(),
-  code : text("code"),
-  status: text("status").default("queued"),
-  language: text("language").notNull(),
-  output: text("output"),
-  timeTaken: text("timetaken"),
-});
+  token : text("token").notNull(),
+  isValid : boolean("isValid").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+})
+

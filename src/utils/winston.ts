@@ -20,3 +20,4 @@ export const serverLogger = createLabeledLogger("SERVER");
 export const workerLogger = createLabeledLogger("WORKER");
 export const redisLogger = createLabeledLogger("REDIS");
 export const publisherLogger = createLabeledLogger("PUBLISHER");
+export const webSocketLogger = createLabeledLogger("WEBSOCKET");

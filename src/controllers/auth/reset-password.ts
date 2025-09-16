@@ -13,7 +13,7 @@ import { db } from "../../db";
 import { account, verification } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { VERIFICATION_IDENTIFIER } from "../../utils/contanst";
-import { hashPassword } from "../../utils/bcrypt";
+import { hashValue } from "../../utils/bcrypt";
 import { getUserByEmail } from "../../service/auth-service";
 import { ZodError } from "zod";
 import { sendSuccess } from "../../utils/response-handler";
@@ -89,7 +89,7 @@ export const resetPasswordController = async (req: Request, res: Response) => {
       );
     }
 
-    const hashNewPassword = await hashPassword(password);
+    const hashNewPassword = await hashValue(password);
 
     const exisitingUser = await getUserByEmail(email);
     if (!exisitingUser) {

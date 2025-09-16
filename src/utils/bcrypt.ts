@@ -3,12 +3,12 @@ import bcrypt from "bcryptjs"
 const SALT_ROUNDS = 12;
 
 
-export const hashPassword = async (password : string) => {
+export const hashValue = async (value : string) => {
     try {
-        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-        return hashedPassword;
+        const hashedvalue = await bcrypt.hash(value, SALT_ROUNDS);
+        return hashedvalue;
     } catch (error) {
-        throw new Error("Error hashing password");
+        throw new Error("Error hashing value");
     }
 }
 

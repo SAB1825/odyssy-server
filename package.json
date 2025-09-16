@@ -7,8 +7,9 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "docker:up": "docker-compose up -d redis rabbitmq",
-    "dev:worker" : "ts-node src/workers/script.ts",
+    "dev:worker": "ts-node src/workers/script.ts",
     "dev": "pnpm docker:up && nodemon src/server.ts",
+    "dev:no-docker": "nodemon src/server.ts",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"
   },
@@ -32,7 +33,9 @@
     "jose": "^6.1.0",
     "resend": "^6.0.2",
     "uuid": "^12.0.0",
+    "websocket": "^1.0.35",
     "winston": "^3.17.0",
+    "ws": "^8.18.3",
     "zod": "^4.1.5"
   },
   "devDependencies": {
@@ -42,7 +45,9 @@
     "@types/ioredis": "^5.0.0",
     "@types/node": "^24.3.1",
     "@types/pg": "^8.15.5",
+    "@types/websocket": "^1.0.10",
     "@types/winston": "^2.4.4",
+    "@types/ws": "^8.18.1",
     "drizzle-kit": "^0.31.4",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",

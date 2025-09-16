@@ -43,6 +43,9 @@ export const errorMessages = () => ( {
 	VERIFICATION_TOKEN_NOT_FOUND: "Verification token not found or has been used",
 	EMAIL_MISMATCH_IN_TOKEN: "The email in the verification link does not match the provided email",
 	INVALID_VERIFICATION_FORMAT: "Invalid verification link format",
+
+	INVALID_API_KEY : "Invalid API Key.",
+	
 })
 export const errorMessage = errorMessages();
 export type errorMessagesType = typeof errorMessage[keyof typeof errorMessage];

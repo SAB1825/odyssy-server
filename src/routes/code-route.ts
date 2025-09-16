@@ -1,13 +1,12 @@
 import { Router } from "express";
 import { executeCodeController } from "../controllers/code/execute-code";
-import { authMiddleware } from "../middlewares/auth-middleware";
-import { getJobStatusController } from "../controllers/code/get-status";
+import { getOutputController } from "../controllers/code/get-output";
+import { apiMiddleware } from "../middlewares/api-middleware";
 
 const router = Router();
 
-// Code execution route - requires authentication
-router.post("/execute", authMiddleware, executeCodeController);
+router.post("/execute", apiMiddleware, executeCodeController);
 
-router.get("/job", authMiddleware, getJobStatusController)
+router.get("/job",apiMiddleware, getOutputController)
 
 export { router as codeRoutes };

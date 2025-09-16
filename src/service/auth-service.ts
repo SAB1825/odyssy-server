@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { account, session, user, verification } from "../db/schema";
-import { comparePassword, hashPassword } from "../utils/bcrypt";
+import { comparePassword, hashValue } from "../utils/bcrypt";
 import { v6 as uuid } from "uuid";
 import { CachedData, setSessionCache } from "./cache-sevice";
 import { VERIFICATION_IDENTIFIER } from "../utils/contanst";
@@ -20,7 +20,7 @@ export const createUser = async (
   email: string,
   password: string
 ) => {
-  const hashedPassword = await hashPassword(password);
+  const hashedPassword = await hashValue(password);
   const userId = uuid();
   const newUser = await db
     .insert(user)
