@@ -8,7 +8,7 @@
     "start": "node dist/server.js",
     "docker:up": "docker-compose up -d redis rabbitmq",
     "dev:worker": "ts-node src/workers/script.ts",
-    "dev": "pnpm docker:up && nodemon src/server.ts",
+    "dev": "npm run docker:up && nodemon src/server.ts",
     "dev:no-docker": "nodemon src/server.ts",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"
@@ -19,11 +19,13 @@
   "packageManager": "pnpm@10.15.0",
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
+    "@types/cors": "^2.8.19",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
     "amqplib": "^0.10.9",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^17.2.2",
     "drizzle-orm": "^0.44.5",

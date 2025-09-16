@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import { Request, Response } from "express";
 import { authRoutes } from "./routes/auth-route";
 import { codeRoutes } from "./routes/code-route";
@@ -64,6 +65,14 @@ wss.on("connection", (ws, req) => {
     message: "WebSocket connection successful"
   }));
 });
+
+app.use(cors({
+  origin: "*",
+  credentials: true, 
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With"],
+  exposedHeaders: ["Set-Cookie"]
+}));
 
 app.use(cookieParser());
 app.use(express.json());
