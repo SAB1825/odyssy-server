@@ -65,7 +65,7 @@ wss.on("connection", (ws, req) => {
     message: "WebSocket connection successful"
   }));
 });
-
+//ALLOW ALL CORS 
 app.use(cors({
   origin: "*",
   credentials: true, 
